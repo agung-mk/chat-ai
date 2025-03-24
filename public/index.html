@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AyeSoul AI Chat</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
@@ -188,54 +188,118 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-10px); }
     }
+
+    /* Tambahkan CSS untuk handling mobile safe areas */
+    @supports(padding: max(0px)) {
+      body {
+        padding-top: max(env(safe-area-inset-top), 0px);
+        padding-bottom: max(env(safe-area-inset-bottom), 0px);
+        min-height: -webkit-fill-available;
+      }
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+      .glass-effect {
+        backdrop-filter: blur(8px);
+      }
+
+      #chatbox {
+        padding: 1rem;
+      }
+
+      .message-appear {
+        max-width: 85% !important;
+      }
+
+      .navbar-title {
+        font-size: 1.25rem;
+      }
+
+      .navbar-subtitle {
+        font-size: 0.7rem;
+      }
+
+      #chat-form {
+        padding: 0.75rem;
+        gap: 0.5rem;
+      }
+
+      #user-input {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+      }
+
+      #sendBtn {
+        padding: 0.75rem;
+      }
+
+      .model-selector {
+        padding: 0.5rem 1rem;
+      }
+    }
+
+    /* Fix for iOS height issues */
+    .min-h-screen {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+
+    /* Fix for mobile overflow */
+    .chat-container {
+      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      height: calc(-webkit-fill-available - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
   </style>
 </head>
 
-<body class="flex flex-col h-screen overflow-hidden" data-theme="dark">
+<body class="flex flex-col min-h-screen overflow-hidden bg-fixed" data-theme="dark">
+  <div class="chat-container flex flex-col">
+    <!-- Navbar dengan classes baru -->
+    <div class="glass-effect p-4 md:p-6 flex justify-between items-center shadow-2xl border-b border-purple-500/20 relative">
+      <div class="flex items-center gap-2 md:gap-4">
+        <i class="fas fa-robot text-2xl md:text-3xl gradient-text float-animation animate-pulse-glow"></i>
+        <div>
+          <h1 class="navbar-title font-bold gradient-text">AyeSoul AI Chat</h1>
+          <p class="navbar-subtitle text-gray-400">Powered by @siagungg_</p>
+        </div>
+      </div>
+      <button id="clearChat" class="neon-border bg-red-500/20 hover:bg-red-500/30 transition-all duration-300 px-3 py-1.5 md:px-6 md:py-2 rounded-full shadow-lg flex items-center gap-2 text-sm">
+        <i class="fas fa-trash"></i> 
+        <span class="hidden md:inline">Clear Chat</span>
+      </button>
+    </div>
 
-  <!-- Navbar -->
-  <div class="glass-effect p-6 flex justify-between items-center shadow-2xl border-b border-purple-500/20 relative">
-    <div class="flex items-center gap-4">
-      <i class="fas fa-robot text-3xl gradient-text float-animation animate-pulse-glow"></i>
-      <div>
-        <h1 class="text-2xl font-bold gradient-text">AyeSoul AI Chat</h1>
-        <p class="text-xs text-gray-400">Powered by @siagungg_</p>
+    <!-- Chatbox dengan padding yang disesuaikan -->
+    <div id="chatbox" class="flex-1 overflow-y-auto space-y-4 md:space-y-6 scroll-smooth relative">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent pointer-events-none"></div>
+    </div>
+
+    <!-- Model selector yang responsif -->
+    <div class="glass-effect px-3 py-2 md:px-6 md:py-3 flex items-center gap-2 md:gap-4 border-t border-purple-500/20">
+      <div class="flex items-center gap-2 md:gap-3">
+        <i class="fas fa-microchip text-purple-400 animate-pulse"></i>
+        <select id="modelSelect" class="model-selector glass-effect text-white text-sm md:text-base px-3 py-1.5 md:px-4 md:py-2 rounded-lg outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 neon-border">
+          <option value="chat">AyeSoul Chat</option>
+        </select>
       </div>
     </div>
-    <button id="clearChat" class="neon-border bg-red-500/20 hover:bg-red-500/30 transition-all duration-300 px-6 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm">
-      <i class="fas fa-trash"></i> 
-      <span>Clear Chat</span>
-    </button>
-  </div>
 
-  <!-- Chatbox -->
-  <div id="chatbox" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth relative">
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent pointer-events-none"></div>
+    <!-- Input form yang responsif -->
+    <form id="chat-form" class="glass-effect p-3 md:p-4 flex items-center gap-2 md:gap-4 border-t border-purple-500/20">
+      <input 
+        type="text" 
+        id="user-input" 
+        class="flex-1 glass-effect text-white p-3 md:p-4 rounded-full outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 placeholder-gray-400 neon-border text-sm md:text-base"
+        placeholder="Ask anything..." 
+        autocomplete="off" 
+        required 
+      />
+      <button type="submit" id="sendBtn" class="bg-gradient-to-r from-purple-500 to-pink-500 p-3 md:p-4 rounded-full shadow-lg text-white hover:shadow-purple-500/20 hover:scale-105 transition-all duration-300 neon-border">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
   </div>
-
-  <!-- Input -->
-  <div class="glass-effect px-6 py-3 flex items-center gap-4 border-t border-purple-500/20">
-    <div class="flex items-center gap-3">
-      <i class="fas fa-microchip text-purple-400 animate-pulse"></i>
-      <select id="modelSelect" class="glass-effect text-white px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 neon-border">
-        <option value="chat">AyeSoul Chat</option>
-      </select>
-    </div>
-  </div>
-
-  <form id="chat-form" class="glass-effect p-4 flex items-center gap-4 border-t border-purple-500/20">
-    <input 
-      type="text" 
-      id="user-input" 
-      class="flex-1 glass-effect text-white p-4 rounded-full outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 placeholder-gray-400 neon-border"
-      placeholder="Ask anything..." 
-      autocomplete="off" 
-      required 
-    />
-    <button type="submit" id="sendBtn" class="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-full shadow-lg text-white hover:shadow-purple-500/20 hover:scale-105 transition-all duration-300 neon-border">
-      <i class="fas fa-paper-plane"></i>
-    </button>
-  </form>
 
   <script>
     const chatForm = document.getElementById('chat-form');
@@ -387,6 +451,16 @@
     clearChat.addEventListener('click', () => {
       chatBox.innerHTML = '';
     });
+
+    // Fix for mobile viewport height
+    function setVH() {
+      let vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+    setVH();
   </script>
 </body>
 
