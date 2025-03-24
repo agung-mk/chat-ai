@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AyeSoul AI Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .animate-fadeIn {
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .text-blur-appear {
+      animation: blurIn 1s forwards;
+    }
+
+    @keyframes blurIn {
+      0% {
+        filter: blur(8px);
+        opacity: 0;
+      }
+
+      50% {
+        filter: blur(4px);
+        opacity: 0.5;
+      }
+
+      100% {
+        filter: blur(0);
+        opacity: 1;
+      }
+    }
+
+    /* Tambahan animasi dan style baru */
+    .glass-effect {
+      background: rgba(17, 25, 40, 0.65);
+      backdrop-filter: blur(12px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .message-transition {
+      transition: all 0.3s ease;
+    }
+
+    .message-transition:hover {
+      transform: translateY(-2px);
+    }
+
+    .gradient-text {
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: radial-gradient(circle at top right, #2d3436 0%, #000000 100%);
+      background-attachment: fixed;
+      color: #fff;
+    }
+
+    /* Tambahan style baru */
+    .loading-animation {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 8px 12px;
+    }
+
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+      animation: loadingDot 1.5s ease-in-out infinite;
+    }
+
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes loadingDot {
+      0%, 100% { transform: scale(0.3); opacity: 0.3; }
+      50% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Code block styling */
+    .code-block {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .code-block:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .code-block pre {
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    .code-header {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Enhanced animations */
+    .animate-pulse-glow {
+      animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% {
+        filter: brightness(1) drop-shadow(0 0 0.5rem rgba(139, 92, 246, 0.1));
+      }
+      50% {
+        filter: brightness(1.2) drop-shadow(0 0 1rem rgba(139, 92, 246, 0.3));
+      }
+    }
+
+    /* Neon border effect */
+    .neon-border {
+      position: relative;
+    }
+
+    .neon-border::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #8c5cf6);
+      filter: blur(5px);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .neon-border:hover::after {
+      opacity: 1;
+    }
+
+    /* Enhanced message animations */
+    .message-appear {
+      animation: messageAppear 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes messageAppear {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Floating animation for robot icon */
+    .float-animation {
+      animation: floating 3s ease-in-out infinite;
+    }
+
+    @keyframes floating {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  </style>
+</head>
+
+<body class="flex flex-col h-screen overflow-hidden" data-theme="dark">
+
+  <!-- Navbar -->
+  <div class="glass-effect p-6 flex justify-between items-center shadow-2xl border-b border-purple-500/20 relative">
+    <div class="flex items-center gap-4">
+      <i class="fas fa-robot text-3xl gradient-text float-animation animate-pulse-glow"></i>
+      <div>
+        <h1 class="text-2xl font-bold gradient-text">AyeSoul AI Chat</h1>
+        <p class="text-xs text-gray-400">Powered by @siagungg_</p>
+      </div>
+    </div>
+    <button id="clearChat" class="neon-border bg-red-500/20 hover:bg-red-500/30 transition-all duration-300 px-6 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm">
+      <i class="fas fa-trash"></i> 
+      <span>Clear Chat</span>
+    </button>
+  </div>
+
+  <!-- Chatbox -->
+  <div id="chatbox" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent pointer-events-none"></div>
+  </div>
+
+  <!-- Input -->
+  <div class="glass-effect px-6 py-3 flex items-center gap-4 border-t border-purple-500/20">
+    <div class="flex items-center gap-3">
+      <i class="fas fa-microchip text-purple-400 animate-pulse"></i>
+      <select id="modelSelect" class="glass-effect text-white px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 neon-border">
+        <option value="chat">AyeSoul Chat</option>
+      </select>
+    </div>
+  </div>
+
+  <form id="chat-form" class="glass-effect p-4 flex items-center gap-4 border-t border-purple-500/20">
+    <input 
+      type="text" 
+      id="user-input" 
+      class="flex-1 glass-effect text-white p-4 rounded-full outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300 placeholder-gray-400 neon-border"
+      placeholder="Ask anything..." 
+      autocomplete="off" 
+      required 
+    />
+    <button type="submit" id="sendBtn" class="bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-full shadow-lg text-white hover:shadow-purple-500/20 hover:scale-105 transition-all duration-300 neon-border">
+      <i class="fas fa-paper-plane"></i>
+    </button>
+  </form>
+
+  <script>
+    const chatForm = document.getElementById('chat-form');
+    const chatBox = document.getElementById('chatbox');
+    const userInput = document.getElementById('user-input');
+    const clearChat = document.getElementById('clearChat');
+    const sendBtn = document.getElementById('sendBtn');
+    const modelSelect = document.getElementById('modelSelect');
+
+    const appendMessage = (sender, content) => {
+      const msg = document.createElement('div');
+      msg.className = `p-5 rounded-2xl shadow-lg w-fit max-w-md message-appear message-transition glass-effect neon-border ${
+        sender === 'user' 
+          ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 self-end ml-auto border border-blue-500/30' 
+          : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 self-start mr-auto border border-purple-500/30'
+      }`;
+
+      if (Array.isArray(content)) {
+        content.forEach((imgUrl) => {
+          const imgContainer = document.createElement('div');
+          imgContainer.className = 'relative group';
+          
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.className = 'rounded-xl max-w-full shadow-md hover:scale-105 transition-all duration-300';
+          
+          const downloadBtn = document.createElement('a');
+          downloadBtn.href = imgUrl;
+          downloadBtn.download = 'ayesoul-ai-image.jpg';
+          downloadBtn.className = 'absolute bottom-2 right-2 bg-black/50 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300';
+          downloadBtn.innerHTML = '<i class="fas fa-download text-white"></i>';
+          
+          imgContainer.appendChild(img);
+          imgContainer.appendChild(downloadBtn);
+          msg.appendChild(imgContainer);
+        });
+      } else if (typeof content === 'string') {
+        if (content.includes('```')) {
+          const codeBlock = createCodeBlock(content);
+          msg.innerHTML = '';
+          msg.appendChild(codeBlock);
+        } else {
+          msg.innerText = content;
+        }
+      }
+
+      chatBox.appendChild(msg);
+      chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    };
+
+    const createCodeBlock = (content) => {
+      const container = document.createElement('div');
+      container.className = 'code-block';
+      
+      const header = document.createElement('div');
+      header.className = 'code-header';
+      
+      const language = content.split('\n')[0].replace('```', '').trim() || 'plaintext';
+      header.innerHTML = `
+        <span>${language}</span>
+        <button class="copy-btn hover:bg-gray-700/30 p-1 rounded transition-all">
+          <i class="far fa-copy"></i>
+        </button>
+      `;
+      
+      const pre = document.createElement('pre');
+      const code = content
+        .split('\n')
+        .slice(1, -1)
+        .join('\n');
+      pre.textContent = code;
+      
+      container.appendChild(header);
+      container.appendChild(pre);
+      
+      const copyBtn = header.querySelector('.copy-btn');
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(code);
+        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+          copyBtn.innerHTML = '<i class="far fa-copy"></i>';
+        }, 2000);
+      });
+      
+      return container;
+    };
+
+    // Update loading message
+    const createLoadingMessage = () => {
+      const loadingMsg = document.createElement('div');
+      loadingMsg.className = 'p-4 rounded-lg shadow-lg glass-effect w-fit max-w-sm text-blur-appear';
+      
+      const loadingContent = document.createElement('div');
+      loadingContent.className = 'loading-animation';
+      
+      for (let i = 0; i < 3; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'loading-dot';
+        loadingContent.appendChild(dot);
+      }
+      
+      loadingMsg.appendChild(loadingContent);
+      return loadingMsg;
+    };
+
+    // Update submit handler
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      appendMessage('user', message);
+      userInput.value = '';
+      userInput.disabled = true;
+      sendBtn.disabled = true;
+
+      const loadingMsg = createLoadingMessage();
+      chatBox.appendChild(loadingMsg);
+      chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            query: message,
+            type: modelSelect.value // mengirim tipe model yang dipilih
+          })
+        });
+        const response = await res.json();
+
+        chatBox.removeChild(loadingMsg);
+
+        if (response.result?.type === 'genimage' && Array.isArray(response.result.images)) {
+          appendMessage('ai', response.result.images);
+        } else {
+          appendMessage('ai', response.result?.message || 'Gagal mendapatkan jawaban!');
+        }
+      } catch (err) {
+        chatBox.removeChild(loadingMsg);
+        appendMessage('ai', 'Error: ' + err.message);
+      } finally {
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    });
+
+    clearChat.addEventListener('click', () => {
+      chatBox.innerHTML = '';
+    });
+  </script>
+</body>
+
+</html>
